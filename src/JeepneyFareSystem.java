@@ -11,6 +11,20 @@ public class JeepneyFareSystem {
         "SANJA MAJOR", "BIGA", "PUNTA", "BAGTAS",
         "PARADAHAN", "DE OCAMPO", "TRECE"
     };
+    
+    static boolean usernameExists(String username) {
+    try (BufferedReader br = new BufferedReader(new FileReader(USERS_FILE))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] d = line.split(",");
+            if (d[1].equalsIgnoreCase(username)) {
+                return true;
+            }
+        }
+    } catch (IOException ignored) {}
+    return false;
+}
+
 
     public static void main(String[] args) {
 
@@ -41,6 +55,7 @@ public class JeepneyFareSystem {
     static void login() {
         System.out.print("Username: ");
         String user = sc.nextLine();
+        
         System.out.print("Password: ");
         String pass = sc.nextLine();
 
@@ -58,6 +73,10 @@ public class JeepneyFareSystem {
         String name = sc.nextLine();
         System.out.print("Username: ");
         String user = sc.nextLine();
+        if (usernameExists(user)) {
+        System.out.println("Username already exists. Please choose another.");
+        return;
+        }
         System.out.print("Password: ");
         String pass = sc.nextLine();
 
@@ -117,7 +136,8 @@ public class JeepneyFareSystem {
         if (distance < 0) return;
 
         int type = passengerType();
-        double fare = applyDiscount(calculateFare(distance), type);
+        double fare = calculateFare(distance, type);
+
 
         System.out.println("Final Fare: ₱" + fare);
 
@@ -147,7 +167,8 @@ public class JeepneyFareSystem {
         if (distance < 0) return;
 
         int type = passengerType();
-        double fare = applyDiscount(calculateFare(distance), type);
+        double fare = calculateFare(distance, type);
+
 
         guest.payFare(fare);
     }
@@ -188,21 +209,43 @@ public class JeepneyFareSystem {
         return Math.abs(b - a) * 1.5;
     }
 
-    static double calculateFare(double dist) {
-        if (dist <= 4) return 13;
-        return 13 + (dist - 4) * 2;
+    static double calculateFare(double distance, int passengerType) {
+
+    double baseFare = 13.0;
+    double extraDistance = distance - 4;
+
+    if (extraDistance <= 0) {
+        return baseFare;
     }
 
-    static double applyDiscount(double fare, int type) {
-        if (type >= 2 && type <= 4) return fare * 0.80;
-        return fare;
+    double ratePerKm = 1.80;
+
+    // Discounted rate for Student, Senior, PWD
+    if (passengerType == 2 || passengerType == 3 || passengerType == 4) {
+        ratePerKm = 1.44;
+    }
+
+    return baseFare + (extraDistance * ratePerKm);
     }
 
     static void showFareChart() {
-        System.out.println("\nBase Fare: ₱13 (first 4 km)");
-        System.out.println("₱2 per km after 4 km");
-        System.out.println("20% discount: Student, Senior, PWD");
+
+    System.out.println("\n=== JEEPNEY FARE CHART ===");
+
+    System.out.println("\nREGULAR PASSENGER");
+    System.out.println("First 4 kilometers      : ₱13.00");
+    System.out.println("Succeeding kilometers   : ₱1.80 per km");
+
+    System.out.println("\nSTUDENT / SENIOR / PWD (20% Discount)");
+    System.out.println("First 4 kilometers      : ₱13.00");
+    System.out.println("Succeeding kilometers   : ₱1.44 per km");
+
+    System.out.println("\nNOTES:");
+    System.out.println("- Discount applies only to succeeding kilometers");
+    System.out.println("- Base fare is fixed and not discounted");
+    System.out.println("- Fare is distance-based along the EPZA–TRECE route");
     }
+
 
     /* ================= FILE HANDLING ================= */
 
@@ -276,3 +319,4 @@ public class JeepneyFareSystem {
         }
     }
 }
+
